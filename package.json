@@ -1,0 +1,7 @@
+{
+  "name": "eastwise",
+  "version": "1.0.0",
+  "description": "EastWise — I Ching & Chinese Astrology",
+  "type": "module",
+  "private": true
+}

@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EastWise · I Ching & Chinese Astrology</title>
+<style>
+:root {
+  --bg: #f5efe3; --card: #fffdf7; --ink: #2b2b2b;
+  --accent: #a33b3b; --muted: #8a7f6d; --line: #3a332c;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", Georgia, "Times New Roman", serif;
+  background: var(--bg); color: var(--ink); min-height: 100vh;
+  display: flex; justify-content: center; padding: 32px 16px;
+}
+.container { width: 100%; max-width: 720px; }
+.view.hidden { display: none; }
+header { text-align: center; margin-bottom: 32px; }
+h1 { font-size: 28px; letter-spacing: 2px; }
+h2 { font-size: 24px; letter-spacing: 2px; }
+.subtitle { color: var(--muted); margin-top: 10px; font-size: 15px; }
+.nav-tabs { display: flex; gap: 12px; margin-bottom: 24px; }
+.nav-tab {
+  flex: 1; padding: 14px; font-size: 17px; letter-spacing: 2px;
+  background: var(--card); color: var(--ink); border: 1px solid #e4dac8;
+  border-radius: 10px; cursor: pointer; font-family: inherit;
+}
+.nav-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.input-form {
+  background: var(--card); border: 1px solid #e4dac8; border-radius: 14px;
+  padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+}
+textarea {
+  width: 100%; padding: 12px; border: 1px solid #d8cdb8; border-radius: 8px;
+  font-size: 15px; resize: vertical; font-family: inherit; margin-bottom: 16px;
+}
+textarea:focus { outline: 2px solid var(--accent); border-color: transparent; }
+.method-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.method-tab {
+  flex: 1; padding: 10px; font-size: 15px; letter-spacing: 1px;
+  background: #fff; color: var(--ink); border: 1px solid #d8cdb8;
+  border-radius: 8px; cursor: pointer; font-family: inherit;
+}
+.method-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.method-input { margin-bottom: 16px; }
+.method-hint { text-align: center; color: var(--muted); padding: 16px; font-size: 15px; }
+#textContent {
+  width: 100%; padding: 14px; font-size: 18px; text-align: center;
+  border: 1px solid #d8cdb8; border-radius: 8px; font-family: inherit;
+}
+.numbers { display: flex; gap: 12px; }
+.numbers input {
+  flex: 1; min-width: 0; font-size: 22px; text-align: center; padding: 14px 8px;
+  border: 1px solid #d8cdb8; border-radius: 8px; background: #fff; font-family: inherit;
+}
+input:focus, select:focus { outline: 2px solid var(--accent); border-color: transparent; }
+.field-label { display: block; font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+#baziDate, #baziTime, #baziGender, #baziPlace {
+  width: 100%; padding: 12px; font-size: 16px;
+  border: 1px solid #d8cdb8; border-radius: 8px; background: #fff;
+  margin-bottom: 16px; font-family: inherit;
+}
+button {
+  width: 100%; padding: 14px; font-size: 17px; letter-spacing: 3px;
+  border: none; border-radius: 8px; background: var(--accent); color: #fff;
+  cursor: pointer; font-family: inherit;
+}
+button:hover { opacity: 0.88; }
+button:active { transform: translateY(1px); }
+.gua-block { margin-bottom: 24px; }
+.gua-method { text-align: center; font-size: 18px; letter-spacing: 2px; margin-bottom: 4px; }
+.gua-method-detail { text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+.gua-row { display: flex; gap: 12px; margin-bottom: 16px; }
+.gua-card {
+  flex: 1; background: var(--card); border: 1px solid #e4dac8;
+  border-radius: 14px; padding: 16px 12px; text-align: center;
+}
+.gua-card h4 { font-size: 15px; color: var(--muted); margin-bottom: 14px; font-weight: normal; }
+.gua-name { margin-top: 14px; font-size: 15px; font-weight: bold; }
+.gua-detail { margin-top: 4px; font-size: 12px; color: var(--muted); }
+.hexagram { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.yao-line { height: 10px; width: 64px; position: relative; }
+.yao-line.yang { background: var(--line); }
+.yao-line.yin { background: transparent; }
+.yao-line.yin::before, .yao-line.yin::after {
+  content: ''; position: absolute; top: 0; height: 10px; width: 26px; background: var(--line);
+}
+.yao-line.yin::before { left: 0; }
+.yao-line.yin::after { right: 0; }
+.yao-line.moving { background: var(--accent); }
+.yao-line.moving.yin { background: transparent; }
+.yao-line.moving.yin::before, .yao-line.moving.yin::after { background: var(--accent); }
+.tiyong {
+  background: var(--card); border: 1px solid #e4dac8; border-radius: 14px;
+  padding: 20px; text-align: center; line-height: 2;
+}
+.relation-line { margin-top: 6px; }
+.relation { color: var(--accent); font-weight: bold; font-size: 19px; }
+.compare {
+  background: var(--card); border: 1px solid #e4dac8; border-radius: 14px;
+  padding: 16px; margin-bottom: 24px; text-align: center;
+}
+.compare-text { font-size: 15px; line-height: 1.8; }
+.jiedu {
+  background: var(--card); border: 1px solid #e4dac8; border-radius: 14px;
+  padding: 20px; margin-bottom: 24px;
+}
+.jiedu h3 { font-size: 16px; color: var(--muted); font-weight: normal; margin-bottom: 12px; text-align: center; }
+.jiedu-text { font-size: 15px; line-height: 1.9; white-space: pre-wrap; text-align: left; }
+.paywall { text-align: center; padding: 12px 0; }
+.paywall-title { font-size: 17px; font-weight: bold; margin-bottom: 8px; }
+.paywall-price { font-size: 15px; color: var(--muted); margin-bottom: 16px; }
+.paywall-note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+.actions { display: flex; flex-direction: column; gap: 12px; }
+button.secondary {
+  background: transparent; color: var(--accent);
+  border: 1px solid var(--accent); letter-spacing: 2px;
+}
+button.secondary:hover { background: var(--accent); color: #fff; }
+button.ghost {
+  background: transparent; color: var(--muted); border: 1px dashed #d8cdb8;
+  letter-spacing: 2px; margin-bottom: 16px;
+}
+button.ghost:hover { color: var(--accent); border-color: var(--accent); }
+.history-item {
+  background: var(--card); border: 1px solid #e4dac8; border-radius: 12px;
+  padding: 16px; margin-bottom: 12px; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+.history-item:hover { border-color: var(--accent); }
+.history-main { min-width: 0; flex: 1; }
+.history-title { font-size: 16px; font-weight: bold; }
+.history-q {
+  font-size: 13px; color: var(--muted); margin-top: 4px;
+  max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.history-side { text-align: right; flex-shrink: 0; }
+.history-method { font-size: 13px; color: var(--ink); }
+.history-time { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.history-empty { text-align: center; color: var(--muted); padding: 40px 0; }
+.bazi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.bazi-cell {
+  background: var(--card); border: 1px solid #e4dac8; border-radius: 12px;
+  padding: 18px 12px; text-align: center;
+}
+.bazi-label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.bazi-value { font-size: 20px; font-weight: bold; letter-spacing: 1px; }
+.bazi-wuxing {
+  background: var(--card); border: 1px solid #e4dac8; border-radius: 12px;
+  padding: 16px; text-align: center; margin-bottom: 24px; font-size: 15px; letter-spacing: 1px;
+}
+@media (max-width: 560px) {
+  .gua-row { flex-direction: column; }
+  .numbers { flex-direction: column; }
+  .method-tabs { flex-direction: column; }
+  .bazi-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<main class="container">
+  <nav class="nav-tabs">
+    <button type="button" class="nav-tab active" data-panel="qigua">I Ching</button>
+    <button type="button" class="nav-tab" data-panel="bazi">BaZi</button>
+  </nav>
+
+  <section id="inputView" class="view">
+    <header>
+      <h1>EastWise</h1>
+      <p class="subtitle">Quiet your mind, think of your question, and choose a casting method</p>
+    </header>
+    <button type="button" id="historyBtn" class="ghost">📜 History</button>
+    <form id="qiguaForm" class="input-form">
+      <textarea id="question" rows="3" placeholder="Your question (optional)"></textarea>
+      <div class="method-tabs" id="methodTabs">
+        <button type="button" class="method-tab active" data-method="number">Numbers</button>
+        <button type="button" class="method-tab" data-method="time">Time</button>
+        <button type="button" class="method-tab" data-method="text">Characters</button>
+      </div>
+      <div id="numberInput" class="method-input">
+        <div class="numbers">
+          <input type="number" id="n1" min="1" step="1" placeholder="1st number" autocomplete="off">
+          <input type="number" id="n2" min="1" step="1" placeholder="2nd number" autocomplete="off">
+          <input type="number" id="n3" min="1" step="1" placeholder="3rd number" autocomplete="off">
+        </div>
+      </div>
+      <div id="timeInput" class="method-input hidden">
+        <p class="method-hint">Using the current Chinese lunar calendar time.</p>
+      </div>
+      <div id="textInput" class="method-input hidden">
+        <input type="text" id="textContent" placeholder="Enter Chinese character(s)" autocomplete="off">
+      </div>
+      <button type="submit" id="submitBtn">Cast</button>
+    </form>
+  </section>
+
+  <section id="resultView" class="view hidden">
+    <header>
+      <h2>Hexagrams</h2>
+      <p id="resultQuestion" class="subtitle"></p>
+    </header>
+    <div id="guaContainer"></div>
+    <div class="compare" id="compareBox" style="display:none">
+      <p id="compareText" class="compare-text"></p>
+    </div>
+    <div class="jiedu" id="jieduBox" style="display:none">
+      <h3>Reading</h3>
+      <div id="paywall" class="paywall">
+        <p class="paywall-title">Unlock your full reading</p>
+        <p class="paywall-price">$1.99 per reading · 5 readings for $4.99</p>
+        <button id="unlockBtn" type="button">Unlock Reading</button>
+        <p class="paywall-note">Payment integration is coming soon — tap to preview.</p>
+      </div>
+      <p id="jieduText" class="jiedu-text" style="display:none"></p>
+    </div>
+    <div class="actions">
+      <button id="secondBtn" type="button" class="secondary">Cast again with another method to compare</button>
+      <button id="againBtn" type="button">Start over</button>
+    </div>
+  </section>
+
+  <section id="historyView" class="view hidden">
+    <header>
+      <h2>History</h2>
+      <p class="subtitle">Saved on this device</p>
+    </header>
+    <div id="historyList"></div>
+    <button id="historyBackBtn" type="button" class="secondary">Back</button>
+  </section>
+
+  <section id="baziFormView" class="view hidden">
+    <header>
+      <h2>BaZi · Four Pillars</h2>
+      <p class="subtitle">Enter your birth time to reveal your four pillars</p>
+    </header>
+    <form id="baziForm" class="input-form">
+      <label class="field-label" for="baziDate">Birth date (Gregorian)</label>
+      <input type="date" id="baziDate" required>
+      <label class="field-label" for="baziTime">Birth time</label>
+      <input type="time" id="baziTime" required>
+      <label class="field-label" for="baziGender">Gender</label>
+      <select id="baziGender">
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+      </select>
+      <label class="field-label" for="baziPlace">Birthplace (e.g. New York, USA)</label>
+      <input type="text" id="baziPlace" placeholder="City, Country">
+      <textarea id="baziQuestion" rows="3" placeholder="What would you like to know? (career, wealth, love…)"></textarea>
+      <button type="submit">Calculate & Read</button>
+    </form>
+  </section>
+
+  <section id="baziResultView" class="view hidden">
+    <header>
+      <h2>Four Pillars</h2>
+      <p id="baziInfo" class="subtitle"></p>
+    </header>
+    <div class="bazi-grid">
+      <div class="bazi-cell"><span class="bazi-label">Year</span><span id="baziYear" class="bazi-value"></span></div>
+      <div class="bazi-cell"><span class="bazi-label">Month</span><span id="baziMonth" class="bazi-value"></span></div>
+      <div class="bazi-cell"><span class="bazi-label">Day</span><span id="baziDay" class="bazi-value"></span></div>
+      <div class="bazi-cell"><span class="bazi-label">Hour</span><span id="baziHour" class="bazi-value"></span></div>
+    </div>
+    <div class="bazi-wuxing" id="baziWuxing"></div>
+    <div class="jiedu">
+      <h3>Reading</h3>
+      <div id="baziPaywall" class="paywall">
+        <p class="paywall-title">Unlock your full reading</p>
+        <p class="paywall-price">$1.99 per reading · 5 readings for $4.99</p>
+        <button id="baziUnlockBtn" type="button">Unlock Reading</button>
+        <p class="paywall-note">Payment integration is coming soon — tap to preview.</p>
+      </div>
+      <p id="baziJieduText" class="jiedu-text" style="display:none"></p>
+    </div>
+    <button id="baziAgainBtn" type="button">Recalculate</button>
+  </section>
+</main>
+
+<script>
+// ===== Eight Trigrams =====
+const BAGUA = {
+  1: { name: '乾', en: 'Qian (Heaven)', symbol: '☰', nature: 'Heaven', wuxing: 'Metal', yinyang: 'Yang', yao: [1,1,1] },
+  2: { name: '兑', en: 'Dui (Lake)', symbol: '☱', nature: 'Lake', wuxing: 'Metal', yinyang: 'Yin', yao: [1,1,0] },
+  3: { name: '离', en: 'Li (Fire)', symbol: '☲', nature: 'Fire', wuxing: 'Fire', yinyang: 'Yin', yao: [1,0,1] },
+  4: { name: '震', en: 'Zhen (Thunder)', symbol: '☳', nature: 'Thunder', wuxing: 'Wood', yinyang: 'Yang', yao: [1,0,0] },
+  5: { name: '巽', en: 'Xun (Wind)', symbol: '☴', nature: 'Wind', wuxing: 'Wood', yinyang: 'Yin', yao: [0,1,1] },
+  6: { name: '坎', en: 'Kan (Water)', symbol: '☵', nature: 'Water', wuxing: 'Water', yinyang: 'Yang', yao: [0,1,0] },
+  7: { name: '艮', en: 'Gen (Mountain)', symbol: '☶', nature: 'Mountain', wuxing: 'Earth', yinyang: 'Yang', yao: [0,0,1] },
+  8: { name: '坤', en: 'Kun (Earth)', symbol: '☷', nature: 'Earth', wuxing: 'Earth', yinyang: 'Yin', yao: [0,0,0] },
+};
+const YAO_KEY_TO_ID = Object.fromEntries(Object.entries(BAGUA).map(([id, g]) => [g.yao.join(''), Number(id)]));
+const WUXING = { Metal: { sheng: 'Water', ke: 'Wood' }, Water: { sheng: 'Wood', ke: 'Fire' }, Wood: { sheng: 'Fire', ke: 'Earth' }, Fire: { sheng: 'Earth', ke: 'Metal' }, Earth: { sheng: 'Metal', ke: 'Water' } };
+const RELATION_EN = { 比和: 'Harmonious (Bi He)', 用生体: 'Object generates Subject', 体生用: 'Subject generates Object', 体克用: 'Subject controls Object', 用克体: 'Object controls Subject' };
+function assertPositiveInt(n, label) { if (!Number.isInteger(n) || n <= 0) throw new Error(`${label} must be a positive integer`); }
+function getWuxingRelation(tiWuxing, yongWuxing) {
+  if (tiWuxing === yongWuxing) return '比和';
+  if (WUXING[yongWuxing].sheng === tiWuxing) return '用生体';
+  if (WUXING[tiWuxing].sheng === yongWuxing) return '体生用';
+  if (WUXING[tiWuxing].ke === yongWuxing) return '体克用';
+  return '用克体';
+}
+function describeGua(id) { const g = BAGUA[id]; return `${g.symbol} ${g.en} (${g.nature}, ${g.wuxing})`; }
+function qigua(n1, n2, n3) {
+  assertPositiveInt(n1, 'First number'); assertPositiveInt(n2, 'Second number'); assertPositiveInt(n3, 'Third number');
+  const upperId = n1 % 8 || 8; const lowerId = n2 % 8 || 8; const moving = n3 % 6 || 6;
+  const benYao = [...BAGUA[lowerId].yao, ...BAGUA[upperId].yao];
+  const bianYao = benYao.slice(); bianYao[moving - 1] = bianYao[moving - 1] === 1 ? 0 : 1;
+  const huLowerYao = [benYao[1], benYao[2], benYao[3]]; const huUpperYao = [benYao[2], benYao[3], benYao[4]];
+  const movingInLower = moving <= 3; const tiId = movingInLower ? upperId : lowerId; const yongId = movingInLower ? lowerId : upperId;
+  const ti = BAGUA[tiId]; const yong = BAGUA[yongId];
+  return {
+    input: { n1, n2, n3 },
+    benGua: { upperId, lowerId, yao: benYao },
+    bianGua: { upperId: YAO_KEY_TO_ID[bianYao.slice(3, 6).join('')], lowerId: YAO_KEY_TO_ID[bianYao.slice(0, 3).join('')], yao: bianYao },
+    huGua: { upperId: YAO_KEY_TO_ID[huUpperYao.join('')], lowerId: YAO_KEY_TO_ID[huLowerYao.join('')] },
+    moving,
+    tiYong: {
+      ti: { id: tiId, name: ti.name, en: ti.en, symbol: ti.symbol, wuxing: ti.wuxing },
+      yong: { id: yongId, name: yong.name, en: yong.en, symbol: yong.symbol, wuxing: yong.wuxing },
+      relation: getWuxingRelation(ti.wuxing, yong.wuxing),
+    },
+  };
+}
+
+const LIUSHISI = [
+  { xu: 1, name: '乾为天', en: 'The Creative', upper: 1, lower: 1 }, { xu: 2, name: '坤为地', en: 'The Receptive', upper: 8, lower: 8 },
+  { xu: 3, name: '水雷屯', en: 'Difficulty at the Beginning', upper: 6, lower: 4 }, { xu: 4, name: '山水蒙', en: 'Youthful Folly', upper: 7, lower: 6 },
+  { xu: 5, name: '水天需', en: 'Waiting', upper: 6, lower: 1 }, { xu: 6, name: '天水讼', en: 'Conflict', upper: 1, lower: 6 },
+  { xu: 7, name: '地水师', en: 'The Army', upper: 8, lower: 6 }, { xu: 8, name: '水地比', en: 'Holding Together', upper: 6, lower: 8 },
+  { xu: 9, name: '风天小畜', en: 'Small Taming', upper: 5, lower: 1 }, { xu: 10, name: '天泽履', en: 'Treading', upper: 1, lower: 2 },
+  { xu: 11, name: '地天泰', en: 'Peace', upper: 8, lower: 1 }, { xu: 12, name: '天地否', en: 'Standstill', upper: 1, lower: 8 },
+  { xu: 13, name: '天火同人', en: 'Fellowship', upper: 1, lower: 3 }, { xu: 14, name: '火天大有', en: 'Great Possession', upper: 3, lower: 1 },
+  { xu: 15, name: '地山谦', en: 'Modesty', upper: 8, lower: 7 }, { xu: 16, name: '雷地豫', en: 'Enthusiasm', upper: 4, lower: 8 },
+  { xu: 17, name: '泽雷随', en: 'Following', upper: 2, lower: 4 }, { xu: 18, name: '山风蛊', en: 'Work on the Decayed', upper: 7, lower: 5 },
+  { xu: 19, name: '地泽临', en: 'Approach', upper: 8, lower: 2 }, { xu: 20, name: '风地观', en: 'Contemplation', upper: 5, lower: 8 },
+  { xu: 21, name: '火雷噬嗑', en: 'Biting Through', upper: 3, lower: 4 }, { xu: 22, name: '山火贲', en: 'Grace', upper: 7, lower: 3 },
+  { xu: 23, name: '山地剥', en: 'Splitting Apart', upper: 7, lower: 8 }, { xu: 24, name: '地雷复', en: 'Return', upper: 8, lower: 4 },
+  { xu: 25, name: '天雷无妄', en: 'Innocence', upper: 1, lower: 4 }, { xu: 26, name: '山天大畜', en: 'Great Taming', upper: 7, lower: 1 },
+  { xu: 27, name: '山雷颐', en: 'Nourishment', upper: 7, lower: 4 }, { xu: 28, name: '泽风大过', en: 'Great Excess', upper: 2, lower: 5 },
+  { xu: 29, name: '坎为水', en: 'The Abysmal Water', upper: 6, lower: 6 }, { xu: 30, name: '离为火', en: 'The Clinging Fire', upper: 3, lower: 3 },
+  { xu: 31, name: '泽山咸', en: 'Influence', upper: 2, lower: 7 }, { xu: 32, name: '雷风恒', en: 'Duration', upper: 4, lower: 5 },
+  { xu: 33, name: '天山遁', en: 'Retreat', upper: 1, lower: 7 }, { xu: 34, name: '雷天大壮', en: 'Great Power', upper: 4, lower: 1 },
+  { xu: 35, name: '火地晋', en: 'Progress', upper: 3, lower: 8 }, { xu: 36, name: '地火明夷', en: 'Darkening of the Light', upper: 8, lower: 3 },
+  { xu: 37, name: '风火家人', en: 'The Family', upper: 5, lower: 3 }, { xu: 38, name: '火泽睽', en: 'Opposition', upper: 3, lower: 2 },
+  { xu: 39, name: '水山蹇', en: 'Obstruction', upper: 6, lower: 7 }, { xu: 40, name: '雷水解', en: 'Deliverance', upper: 4, lower: 6 },
+  { xu: 41, name: '山泽损', en: 'Decrease', upper: 7, lower: 2 }, { xu: 42, name: '风雷益', en: 'Increase', upper: 5, lower: 4 },
+  { xu: 43, name: '泽天夬', en: 'Breakthrough', upper: 2, lower: 1 }, { xu: 44, name: '天风姤', en: 'Coming to Meet', upper: 1, lower: 5 },
+  { xu: 45, name: '泽地萃', en: 'Gathering Together', upper: 2, lower: 8 }, { xu: 46, name: '地风升', en: 'Pushing Upward', upper: 8, lower: 5 },
+  { xu: 47, name: '泽水困', en: 'Oppression', upper: 2, lower: 6 }, { xu: 48, name: '水风井', en: 'The Well', upper: 6, lower: 5 },
+  { xu: 49, name: '泽火革', en: 'Revolution', upper: 2, lower: 3 }, { xu: 50, name: '火风鼎', en: 'The Cauldron', upper: 3, lower: 5 },
+  { xu: 51, name: '震为雷', en: 'The Arousing Thunder', upper: 4, lower: 4 }, { xu: 52, name: '艮为山', en: 'Keeping Still Mountain', upper: 7, lower: 7 },
+  { xu: 53, name: '风山渐', en: 'Development', upper: 5, lower: 7 }, { xu: 54, name: '雷泽归妹', en: 'The Marrying Maiden', upper: 4, lower: 2 },
+  { xu: 55, name: '雷火丰', en: 'Abundance', upper: 4, lower: 3 }, { xu: 56, name: '火山旅', en: 'The Wanderer', upper: 3, lower: 7 },
+  { xu: 57, name: '巽为风', en: 'The Gentle Wind', upper: 5, lower: 5 }, { xu: 58, name: '兑为泽', en: 'The Joyous Lake', upper: 2, lower: 2 },
+  { xu: 59, name: '风水涣', en: 'Dispersion', upper: 5, lower: 6 }, { xu: 60, name: '水泽节', en: 'Limitation', upper: 6, lower: 2 },
+  { xu: 61, name: '风泽中孚', en: 'Inner Truth', upper: 5, lower: 2 }, { xu: 62, name: '雷山小过', en: 'Small Excess', upper: 4, lower: 7 },
+  { xu: 63, name: '水火既济', en: 'After Completion', upper: 6, lower: 3 }, { xu: 64, name: '火水未济', en: 'Before Completion', upper: 3, lower: 6 },
+];
+const GUA_INDEX = new Map();
+for (const g of LIUSHISI) GUA_INDEX.set(`${g.upper}-${g.lower}`, g);
+function findGua(upperId, lowerId) {
+  const g = GUA_INDEX.get(`${upperId}-${lowerId}`);
+  if (!g) throw new Error(`Hexagram not found: upper ${upperId}, lower ${lowerId}`);
+  return g;
+}
+
+const CN_MONTH = { 正月: 1, 一月: 1, 二月: 2, 三月: 3, 四月: 4, 五月: 5, 六月: 6, 七月: 7, 八月: 8, 九月: 9, 十月: 10, 冬月: 11, 十一月: 11, 腊月: 12, 十二月: 12 };
+const BI_HUA = {
+  一:1, 二:2, 三:3, 四:5, 五:4, 六:4, 七:2, 八:2, 九:2, 十:2, 百:6, 千:3, 万:3, 零:13,
+  天:4, 地:6, 日:4, 月:4, 星:9, 云:4, 风:4, 雨:8, 雪:11, 雷:13, 电:5, 山:3, 水:4, 火:4, 木:4, 金:8, 土:3, 石:5, 田:5, 海:10,
+  江:6, 河:8, 湖:12, 东:5, 西:6, 南:9, 北:5, 中:4, 上:3, 下:3, 左:5, 右:5, 前:9, 后:6, 内:4, 外:5,
+  年:6, 月:4, 日:4, 时:7, 分:4, 秒:9, 春:9, 夏:10, 秋:9, 冬:5, 今:4, 明:8, 昨:9, 早:6, 晚:11, 晨:11, 午:4, 夜:8, 刻:8,
+  人:2, 你:7, 我:7, 他:5, 她:6, 它:5, 们:5, 谁:10, 什:4, 么:3, 何:7, 家:10, 父:4, 母:5, 子:3, 女:3, 夫:4, 妻:8, 朋:8, 友:4,
+  亲:9, 爱:10, 情:11, 男:7, 老:6, 幼:5, 心:4, 手:4, 口:3, 目:5, 耳:6, 足:7, 头:5, 发:5, 脸:11, 身:7, 体:7,
+  马:3, 牛:4, 羊:6, 鱼:8, 鸟:5, 龙:5, 虎:8, 兔:8, 蛇:11, 鸡:7, 狗:8, 猪:11,
+  花:7, 草:9, 树:9, 叶:5, 根:10, 果:8, 米:6, 茶:9, 酒:10, 饭:7, 菜:11,
+  学:8, 习:3, 工:3, 作:7, 事:8, 业:5, 职:11, 位:7, 班:10, 薪:16, 考:6, 试:6, 成:6, 败:7, 功:5, 名:6, 利:7, 得:11, 失:5, 读:10,
+  写:5, 说:9, 听:7, 看:9, 想:13, 财:7, 运:7, 钱:10, 富:12, 贵:9, 赚:14, 亏:3, 赢:17, 输:13, 买:6, 卖:8,
+  健:10, 康:11, 安:6, 病:10, 医:7, 药:9, 命:8, 乐:5, 喜:12, 怒:8, 哀:9, 忧:7, 愁:13, 思:9, 婚:11, 姻:9, 恋:10,
+  缘:12, 嫁:13, 娶:11, 行:6, 走:7, 跑:12, 坐:7, 立:5, 高:10, 低:7, 长:4, 短:12, 大:3,
+  小:3, 多:6, 少:4, 好:6, 坏:7, 快:7, 慢:14, 是:9, 否:7, 有:6, 无:4, 会:6, 能:10, 可:5, 以:4, 要:9, 不:4, 新:13, 旧:5, 生:5,
+  死:6, 升:4, 降:8, 开:4, 关:6, 进:7, 出:5, 来:7, 去:5, 换:10, 找:7, 求:7, 存:6, 取:8, 合:6, 分:4, 离:10, 聚:14, 散:12,
+  顺:9, 逆:9, 吉:6, 凶:4, 难:10, 易:8, 缓:12, 急:9, 变:8, 守:6, 等:12, 待:9, 转:8, 移:11, 留:10, 辞:13,
+  的:8, 了:2, 在:6, 和:8, 也:3, 就:12, 都:10, 还:7, 把:7, 被:10, 让:5, 给:9, 跟:13, 对:5, 与:3, 为:4,
+};
+function getStroke(char) { return BI_HUA[char] || ((char.codePointAt(0) % 24) + 1); }
+function timeNumbers(now = new Date()) {
+  const year = now.getFullYear();
+  const yearZhi = ((year - 4) % 12 + 12) % 12 + 1;
+  let month = 1; let day = 1;
+  try {
+    const fmt = new Intl.DateTimeFormat('zh-CN-u-ca-chinese', { month: 'long', day: 'numeric' });
+    const parts = fmt.formatToParts(now);
+    const mRaw = parts.find((p) => p.type === 'month')?.value || '';
+    month = CN_MONTH[mRaw] || 1;
+    day = Number(parts.find((p) => p.type === 'day')?.value) || 1;
+  } catch {}
+  const hour = now.getHours();
+  const hourZhi = ((Math.floor((hour + 1) / 2)) % 12) + 1;
+  const upper = (yearZhi + month + day) % 8 || 8;
+  const lower = (yearZhi + month + day + hourZhi) % 8 || 8;
+  const moving = (yearZhi + month + day + hourZhi) % 6 || 6;
+  return { n1: upper, n2: lower, n3: moving, detail: `Lunar month ${month}, day ${day} · Year branch ${yearZhi} · Hour branch ${hourZhi}` };
+}
+function textNumbers(text) {
+  const chars = [...String(text).trim()].filter((c) => /\S/.test(c));
+  if (chars.length === 0) throw new Error('Please enter at least one Chinese character');
+  const strokes = chars.map(getStroke);
+  const total = strokes.reduce((a, b) => a + b, 0);
+  let upper; let lower;
+  if (chars.length === 1) { upper = Math.ceil(total / 2); lower = Math.floor(total / 2); }
+  else if (chars.length === 2) { upper = strokes[0]; lower = strokes[1]; }
+  else { const mid = Math.floor(chars.length / 2); upper = strokes.slice(0, mid).reduce((a, b) => a + b, 0); lower = strokes.slice(mid).reduce((a, b) => a + b, 0); }
+  return { n1: upper % 8 || 8, n2: lower % 8 || 8, n3: total % 6 || 6, detail: `Stroke counts: ${strokes.join(' + ')} = ${total}` };
+}
+
+const GAN10 = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const ZHI12 = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const GAN_EN = { 甲:'Jia', 乙:'Yi', 丙:'Bing', 丁:'Ding', 戊:'Wu', 己:'Ji', 庚:'Geng', 辛:'Xin', 壬:'Ren', 癸:'Gui' };
+const ZHI_EN = { 子:'Zi', 丑:'Chou', 寅:'Yin', 卯:'Mao', 辰:'Chen', 巳:'Si', 午:'Wu', 未:'Wei', 申:'Shen', 酉:'You', 戌:'Xu', 亥:'Hai' };
+const GAN_WUXING = { 甲:'Wood', 乙:'Wood', 丙:'Fire', 丁:'Fire', 戊:'Earth', 己:'Earth', 庚:'Metal', 辛:'Metal', 壬:'Water', 癸:'Water' };
+const ZHI_WUXING = { 子:'Water', 丑:'Earth', 寅:'Wood', 卯:'Wood', 辰:'Earth', 巳:'Fire', 午:'Fire', 未:'Earth', 申:'Metal', 酉:'Metal', 戌:'Earth', 亥:'Water' };
+function julianDay(y, m, d) {
+  const a = Math.floor((14 - m) / 12); const y2 = y + 4800 - a; const m2 = m + 12 * a - 3;
+  return d + Math.floor((153 * m2 + 2) / 5) + 365 * y2 + Math.floor(y2 / 4) - Math.floor(y2 / 100) + Math.floor(y2 / 400) - 32045;
+}
+function getDayGanzhi(y, m, d) { const offset = julianDay(y, m, d) - julianDay(1900, 1, 1); const idx = (((offset + 10) % 60) + 60) % 60; return { ganIdx: idx % 10, zhiIdx: idx % 12 }; }
+function getYearGanzhi(y, m, d) { let cy = y; if (m < 2 || (m === 2 && d < 4)) cy = y - 1; const idx = (((cy - 4) % 60) + 60) % 60; return { ganIdx: idx % 10, zhiIdx: idx % 12 }; }
+function getMonthGanzhi(yearGanIdx, m, d) { let zhiIdx; if (m === 1) zhiIdx = 1; else if (m === 2 && d < 4) zhiIdx = 1; else zhiIdx = m % 12; const yinGan = ((yearGanIdx % 5) * 2 + 2) % 10; const ganIdx = (((yinGan + (zhiIdx - 2)) % 10) + 10) % 10; return { ganIdx, zhiIdx }; }
+function getHourGanzhi(dayGanIdx, hour) { const zhiIdx = Math.floor((hour + 1) / 2) % 12; const ziGan = (dayGanIdx % 5) * 2; return { ganIdx: (ziGan + zhiIdx) % 10, zhiIdx }; }
+function baziPaiPan({ year, month, day, hour = 12 }) {
+  const yearGz = getYearGanzhi(year, month, day);
+  const monthGz = getMonthGanzhi(yearGz.ganIdx, month, day);
+  const dayGz = getDayGanzhi(year, month, day);
+  const hourGz = getHourGanzhi(dayGz.ganIdx, hour);
+  const wuxing = { Metal: 0, Wood: 0, Water: 0, Fire: 0, Earth: 0 };
+  for (const gz of [yearGz, monthGz, dayGz, hourGz]) { wuxing[GAN_WUXING[GAN10[gz.ganIdx]]]++; wuxing[ZHI_WUXING[ZHI12[gz.zhiIdx]]]++; }
+  return {
+    year: GAN10[yearGz.ganIdx] + ZHI12[yearGz.zhiIdx], yearEn: GAN_EN[GAN10[yearGz.ganIdx]] + ' ' + ZHI_EN[ZHI12[yearGz.zhiIdx]],
+    month: GAN10[monthGz.ganIdx] + ZHI12[monthGz.zhiIdx], monthEn: GAN_EN[GAN10[monthGz.ganIdx]] + ' ' + ZHI_EN[ZHI12[monthGz.zhiIdx]],
+    day: GAN10[dayGz.ganIdx] + ZHI12[dayGz.zhiIdx], dayEn: GAN_EN[GAN10[dayGz.ganIdx]] + ' ' + ZHI_EN[ZHI12[dayGz.zhiIdx]],
+    hour: GAN10[hourGz.ganIdx] + ZHI12[hourGz.zhiIdx], hourEn: GAN_EN[GAN10[hourGz.ganIdx]] + ' ' + ZHI_EN[ZHI12[hourGz.zhiIdx]],
+    dayMaster: GAN_EN[GAN10[dayGz.ganIdx]], dayMasterWuxing: GAN_WUXING[GAN10[dayGz.ganIdx]], wuxing,
+  };
+}
+function getLiunian(startYear, count = 5) {
+  const list = [];
+  for (let y = startYear; y < startYear + count; y++) { const idx = (((y - 4) % 60) + 60) % 60; list.push({ year: y, ganZhi: GAN_EN[GAN10[idx % 10]] + ' ' + ZHI_EN[ZHI12[idx % 12]] }); }
+  return list;
+}
+
+// ===== UI =====
+const inputView = document.getElementById('inputView');
+const resultView = document.getElementById('resultView');
+const historyView = document.getElementById('historyView');
+const baziFormView = document.getElementById('baziFormView');
+const baziResultView = document.getElementById('baziResultView');
+const form = document.getElementById('qiguaForm');
+const submitBtn = document.getElementById('submitBtn');
+const guaContainer = document.getElementById('guaContainer');
+const compareBox = document.getElementById('compareBox');
+const compareText = document.getElementById('compareText');
+const jieduBox = document.getElementById('jieduBox');
+const jieduText = document.getElementById('jieduText');
+const paywall = document.getElementById('paywall');
+const unlockBtn = document.getElementById('unlockBtn');
+const secondBtn = document.getElementById('secondBtn');
+const againBtn = document.getElementById('againBtn');
+const resultQuestion = document.getElementById('resultQuestion');
+const historyList = document.getElementById('historyList');
+const baziForm = document.getElementById('baziForm');
+const baziPaywall = document.getElementById('baziPaywall');
+const baziUnlockBtn = document.getElementById('baziUnlockBtn');
+const baziJieduText = document.getElementById('baziJieduText');
+
+let currentMethod = 'number';
+let gua1 = null;
+let gua2 = null;
+let isHistoryMode = false;
+let currentQuestion = '';
+let currentComparison = null;
+let baziPayload = null;
+const HISTORY_KEY = 'eastwise_history';
+
+document.querySelectorAll('.nav-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach((t) => t.classList.toggle('active', t === tab));
+    switchPanel(tab.dataset.panel);
+  });
+});
+function switchPanel(panel) {
+  document.querySelectorAll('.view').forEach((v) => v.classList.add('hidden'));
+  if (panel === 'qigua') inputView.classList.remove('hidden');
+  else baziFormView.classList.remove('hidden');
+}
+
+document.querySelectorAll('.method-tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    currentMethod = tab.dataset.method;
+    document.querySelectorAll('.method-tab').forEach((t) => t.classList.toggle('active', t === tab));
+    showMethodInput(currentMethod);
+  });
+});
+function showMethodInput(method) {
+  document.getElementById('numberInput').classList.toggle('hidden', method !== 'number');
+  document.getElementById('timeInput').classList.toggle('hidden', method !== 'time');
+  document.getElementById('textInput').classList.toggle('hidden', method !== 'text');
+}
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const question = document.getElementById('question').value.trim();
+  let nums; let methodLabel; let detail = '';
+  try {
+    if (currentMethod === 'number') {
+      const n1 = Number(document.getElementById('n1').value); const n2 = Number(document.getElementById('n2').value); const n3 = Number(document.getElementById('n3').value);
+      nums = { n1, n2, n3 }; methodLabel = 'Numbers'; detail = `${n1} / ${n2} / ${n3}`;
+    } else if (currentMethod === 'time') {
+      const t = timeNumbers(); nums = { n1: t.n1, n2: t.n2, n3: t.n3 }; methodLabel = 'Time'; detail = t.detail;
+    } else {
+      const t = textNumbers(document.getElementById('textContent').value);
+      nums = { n1: t.n1, n2: t.n2, n3: t.n3 }; methodLabel = 'Characters'; detail = t.detail;
+    }
+  } catch (err) { alert(err.message); return; }
+  const r = qigua(nums.n1, nums.n2, nums.n3);
+  const gua = { method: methodLabel, detail, r, ben: findGua(r.benGua.upperId, r.benGua.lowerId), bian: findGua(r.bianGua.upperId, r.bianGua.lowerId), hu: findGua(r.huGua.upperId, r.huGua.lowerId) };
+  if (!gua1) gua1 = gua; else gua2 = gua;
+  isHistoryMode = false;
+  showResult(question);
+});
+
+secondBtn.addEventListener('click', () => { goInput(true); });
+againBtn.addEventListener('click', () => {
+  if (isHistoryMode) { isHistoryMode = false; againBtn.textContent = 'Start over'; showHistory(); }
+  else { gua1 = null; gua2 = null; goInput(false); }
+});
+document.getElementById('historyBtn').addEventListener('click', showHistory);
+document.getElementById('historyBackBtn').addEventListener('click', () => {
+  document.querySelectorAll('.view').forEach((v) => v.classList.add('hidden'));
+  inputView.classList.remove('hidden');
+});
+
+function goInput(keepQuestion) {
+  document.querySelectorAll('.view').forEach((v) => v.classList.add('hidden'));
+  inputView.classList.remove('hidden');
+  submitBtn.textContent = gua1 && !gua2 ? 'Cast second hexagram' : 'Cast';
+  if (!keepQuestion) { form.reset(); }
+  else { document.getElementById('n1').value = ''; document.getElementById('n2').value = ''; document.getElementById('n3').value = ''; document.getElementById('textContent').value = ''; }
+  inputView.scrollIntoView({ behavior: 'smooth' });
+}
+
+function showResult(question) {
+  resultQuestion.textContent = question ? `Question: ${question}` : '';
+  currentQuestion = question || '';
+  guaContainer.innerHTML = '';
+  compareBox.style.display = 'none';
+  guaContainer.innerHTML = renderGuaBlock(gua1);
+  if (gua2) {
+    guaContainer.innerHTML += renderGuaBlock(gua2);
+    currentComparison = compareGuas(gua1, gua2);
+    compareText.textContent = currentComparison;
+    compareBox.style.display = 'block';
+    secondBtn.style.display = 'none';
+  } else {
+    currentComparison = null;
+    secondBtn.style.display = 'block';
+  }
+  // 显示付费墙
+  jieduBox.style.display = 'block';
+  paywall.style.display = 'block';
+  jieduText.style.display = 'none';
+  againBtn.style.display = 'block';
+  againBtn.textContent = 'Start over';
+  document.querySelectorAll('.view').forEach((v) => v.classList.add('hidden'));
+  resultView.classList.remove('hidden');
+  resultView.scrollIntoView({ behavior: 'smooth' });
+}
+
+unlockBtn.addEventListener('click', () => {
+  paywall.style.display = 'none';
+  jieduText.style.display = 'block';
+  jieduText.textContent = 'Reading your hexagram…';
+  const guas = gua2 ? [gua1, gua2] : [gua1];
+  requestJiedu(guas, currentComparison, currentQuestion);
+});
+
+function loadHistory() { try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch { return []; } }
+function saveHistoryList(list) { try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, 50))); } catch {} }
+function addHistory(record) { const list = loadHistory(); list.unshift(record); saveHistoryList(list); }
+function formatTime(ts) { const d = new Date(ts); const p = (n) => String(n).padStart(2, '0'); return `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`; }
+function showHistory() { document.querySelectorAll('.view').forEach((v) => v.classList.add('hidden')); historyView.classList.remove('hidden'); renderHistory(); }
+function renderHistory() {
+  const list = loadHistory();
+  if (list.length === 0) { historyList.innerHTML = '<p class="history-empty">No history yet — cast your first hexagram</p>'; return; }
+  historyList.innerHTML = list.map((rec) => {
+    const first = rec.guas[0];
+    const benName = first?.ben?.en || '';
+    const title = rec.guas.length > 1 ? `${benName} ⇄ ${rec.guas[1]?.ben?.en || ''}` : benName;
+    return `<div class="history-item" data-id="${rec.id}">
+      <div class="history-main"><p class="history-title">${title}</p><p class="history-q">${rec.question || '(no question)'}</p></div>
+      <div class="history-side"><p class="history-method">${rec.methods.join(' · ')}</p><p class="history-time">${rec.time}</p></div>
+    </div>`;
+  }).join('');
+}
+historyList.addEventListener('click', (e) => {
+  const item = e.target.closest('.history-item');
+  if (!item) return;
+  const rec = loadHistory().find((r) => String(r.id) === item.dataset.id);
+  if (rec) showHistoryDetail(rec);
+});
+function showHistoryDetail(rec) {
+  isHistoryMode = true;
+  resultQuestion.textContent = rec.question ? `Question: ${rec.question}` : '';
+  guaContainer.innerHTML = rec.guas.map(renderGuaBlock).join('');
+  if (rec.guas.length > 1 && rec.comparison) { compareText.textContent = rec.comparison; compareBox.style.display = 'block'; }
+  else compareBox.style.display = 'none';
+  jieduBox.style.display = 'block';
+  paywall.style.display = 'none';
+  jieduText.style.display = 'block';
+  jieduText.textContent = rec.jiedu || '(no reading)';
+  secondBtn.style.display = 'none';
+  againBtn.style.display = 'block';
+  againBtn.textContent = 'Back to history';
+  document.querySelectorAll('.view').forEach((v) => v.classList.add('hidden'));
+  resultView.classList.remove('hidden');
+  resultView.scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderGuaBlock(g) {
+  const { r, ben, bian, hu, method, detail } = g;
+  const yaoOf = (o) => o.yao || [...BAGUA[o.lowerId].yao, ...BAGUA[o.upperId].yao];
+  return `
+    <div class="gua-block">
+      <h3 class="gua-method">${method}</h3>
+      <p class="gua-method-detail">${detail || ''}</p>
+      <div class="gua-row">
+        <div class="gua-card">
+          <h4>Original</h4><div class="hexagram">${hexagramHTML(yaoOf(r.benGua), r.moving)}</div>
+          <p class="gua-name">${ben.en}</p><p class="gua-detail">Hexagram ${ben.xu} · ${describeGua(r.benGua.upperId)} over ${describeGua(r.benGua.lowerId)}</p>
+        </div>
+        <div class="gua-card">
+          <h4>Changed</h4><div class="hexagram">${hexagramHTML(yaoOf(r.bianGua), null)}</div>
+          <p class="gua-name">${bian.en}</p><p class="gua-detail">Hexagram ${bian.xu} · ${describeGua(r.bianGua.upperId)} over ${describeGua(r.bianGua.lowerId)}</p>
+        </div>
+        <div class="gua-card">
+          <h4>Nuclear</h4><div class="hexagram">${hexagramHTML(yaoOf(r.huGua), null)}</div>
+          <p class="gua-name">${hu.en}</p><p class="gua-detail">Hexagram ${hu.xu} · ${describeGua(r.huGua.upperId)} over ${describeGua(r.huGua.lowerId)}</p>
+        </div>
+      </div>
+      <div class="tiyong">
+        <p>Subject (Ti): ${r.tiYong.ti.symbol} ${r.tiYong.ti.en} (${r.tiYong.ti.wuxing})</p>
+        <p>Object (Yong): ${r.tiYong.yong.symbol} ${r.tiYong.yong.en} (${r.tiYong.yong.wuxing})</p>
+        <p class="relation-line">Relation: <span class="relation">${RELATION_EN[r.tiYong.relation]}</span></p>
+      </div>
+    </div>`;
+}
+function hexagramHTML(yao, movingLine) {
+  const lines = [];
+  for (let i = yao.length - 1; i >= 0; i--) {
+    const cls = 'yao-line ' + (yao[i] === 1 ? 'yang' : 'yin') + (movingLine === i + 1 ? ' moving' : '');
+    const title = movingLine === i + 1 ? ` title="Moving line ${i + 1}"` : '';
+    lines.push(`<div class="${cls}"${title}></div>`);
+  }
+  return lines.join('');
+}
+function compareGuas(g1, g2) {
+  const score = (rel) => ({ 用生体: 2, 比和: 2, 体克用: 1, 体生用: 0, 用克体: -1 }[rel] ?? 0);
+  const s1 = score(g1.r.tiYong.relation); const s2 = score(g2.r.tiYong.relation);
+  if (s1 > 0 && s2 > 0) return 'Both castings show favorable relations — a harmonious, supportive trend.';
+  if (s1 < 0 && s2 < 0) return 'Both castings lean cautious — a consistent signal to proceed carefully.';
+  if (s1 === 0 && s2 === 0) return 'Both castings suggest "energy output" — pace yourself and be mindful.';
+  return 'The two castings diverge — the outcome is not yet fixed; weigh your options and stay steady.';
+}
+async function requestJiedu(guas, comparison, question) {
+  const payload = {
+    question: question || '(no specific question)',
+    methods: [...new Set(guas.map((g) => g.method))],
+    guas: guas.map((g) => ({
+      method: g.method,
+      benGua: { en: g.ben.en, xu: g.ben.xu },
+      bianGua: { en: g.bian.en, xu: g.bian.xu },
+      huGua: { en: g.hu.en, xu: g.hu.xu },
+      moving: g.r.moving,
+      ti: { en: g.r.tiYong.ti.en, wuxing: g.r.tiYong.ti.wuxing },
+      yong: { en: g.r.tiYong.yong.en, wuxing: g.r.tiYong.yong.wuxing },
+      relation: RELATION_EN[g.r.tiYong.relation],
+    })),
+    comparison: comparison || '',
+  };
+  try {
+    const res = await fetch('/api/jiedu', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Reading failed');
+    jieduText.textContent = data.text;
+    addHistory({ id: Date.now(), time: formatTime(Date.now()), question: question || '', methods: [...new Set(guas.map((g) => g.method))], guas, comparison: comparison || '', jiedu: data.text });
+  } catch (err) { jieduText.textContent = 'Reading failed: ' + err.message; }
+}
+
+baziForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const dateStr = document.getElementById('baziDate').value;
+  const timeStr = document.getElementById('baziTime').value;
+  const gender = document.getElementById('baziGender').value;
+  const place = document.getElementById('baziPlace').value.trim();
+  const question = document.getElementById('baziQuestion').value.trim();
+  if (!dateStr || !timeStr) { alert('Please enter your birth date and time'); return; }
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const [hour] = timeStr.split(':').map(Number);
+  const bazi = baziPaiPan({ year: y, month: m, day: d, hour });
+  const liunian = getLiunian(new Date().getFullYear(), 5);
+  baziPayload = { gender, date: dateStr, time: timeStr, question, bazi, place, liunian };
+  document.getElementById('baziInfo').textContent = `${gender} · ${dateStr} ${timeStr} · ${place || 'birthplace unknown'}`;
+  document.getElementById('baziYear').textContent = bazi.year;
+  document.getElementById('baziMonth').textContent = bazi.month;
+  document.getElementById('baziDay').textContent = bazi.day;
+  document.getElementById('baziHour').textContent = bazi.hour;
+  document.getElementById('baziWuxing').textContent = 'Five Elements: ' + Object.entries(bazi.wuxing).map(([k, v]) => `${k} ${v}`).join(' · ') + '  |  Day Master: ' + bazi.dayMaster + ' (' + bazi.dayMasterWuxing + ')';
+  baziPaywall.style.display = 'block';
+  baziJieduText.style.display = 'none';
+  document.querySelectorAll('.view').forEach((v) => v.classList.add('hidden'));
+  baziResultView.classList.remove('hidden');
+  baziResultView.scrollIntoView({ behavior: 'smooth' });
+});
+document.getElementById('baziAgainBtn').addEventListener('click', () => {
+  document.querySelectorAll('.view').forEach((v) => v.classList.add('hidden'));
+  baziFormView.classList.remove('hidden');
+});
+baziUnlockBtn.addEventListener('click', () => {
+  baziPaywall.style.display = 'none';
+  baziJieduText.style.display = 'block';
+  baziJieduText.textContent = 'Reading your chart…';
+  requestBaziJiedu(baziPayload);
+});
+async function requestBaziJiedu(payload) {
+  try {
+    const res = await fetch('/api/bazi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Reading failed');
+    baziJieduText.textContent = data.text;
+  } catch (err) { baziJieduText.textContent = 'Reading failed: ' + err.message; }
+}
+</script>
+</body>
+</html>
